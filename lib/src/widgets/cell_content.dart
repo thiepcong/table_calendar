@@ -79,8 +79,8 @@ class CellContent extends StatelessWidget {
           );
     } else if (isSelected) {
       cell = calendarBuilders.selectedBuilder?.call(context, day, focusedDay) ??
-          AnimatedContainer(
-            duration: duration,
+          Container(
+            // duration: duration,
             margin: margin,
             padding: padding,
             decoration: calendarStyle.selectedDecoration,
