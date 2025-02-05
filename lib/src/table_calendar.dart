@@ -8,12 +8,19 @@ import 'package:intl/intl.dart';
 import 'package:simple_gesture_detector/simple_gesture_detector.dart';
 
 import 'customization/calendar_builders.dart';
+import 'customization/calendar_choose_month_style.dart';
+import 'customization/calendar_choose_view.dart';
+import 'customization/calendar_choose_year_style.dart';
 import 'customization/calendar_style.dart';
 import 'customization/days_of_week_style.dart';
 import 'customization/header_style.dart';
 import 'shared/utils.dart';
 import 'table_calendar_base.dart';
+import 'widgets/calendar_choose_month.dart';
+import 'widgets/calendar_choose_year.dart';
 import 'widgets/calendar_header.dart';
+import 'widgets/calendar_header_month.dart';
+import 'widgets/calendar_header_year.dart';
 import 'widgets/cell_content.dart';
 
 /// Signature for `onDaySelected` callback. Contains the selected day and focused day.
@@ -204,6 +211,10 @@ class TableCalendar<T> extends StatefulWidget {
   /// Called when the calendar is created. Exposes its PageController.
   final void Function(PageController pageController)? onCalendarCreated;
 
+  final CalendarChooseYearStyle? calendarChooseYearStyle;
+
+  final CalendarChooseMonthStyle? calendarChooseMonthStyle;
+
   /// Creates a `TableCalendar` widget.
   TableCalendar({
     Key? key,
@@ -260,6 +271,8 @@ class TableCalendar<T> extends StatefulWidget {
     this.onPageChanged,
     this.onFormatChanged,
     this.onCalendarCreated,
+    this.calendarChooseYearStyle,
+    this.calendarChooseMonthStyle,
   })  : assert(availableCalendarFormats.keys.contains(calendarFormat)),
         assert(availableCalendarFormats.length <= CalendarFormat.values.length),
         assert(weekendDays.isNotEmpty
@@ -277,15 +290,22 @@ class TableCalendar<T> extends StatefulWidget {
 }
 
 class _TableCalendarState<T> extends State<TableCalendar<T>> {
-  late final PageController _pageController;
+  PageController? _pageController;
+  PageController? _pageYearController;
+  PageController? _pageMonthController;
   late final ValueNotifier<DateTime> _focusedDay;
+  late final ValueNotifier<DateTime> _focusedMonth;
+  late final ValueNotifier<DateTime> _focusedYear;
   late RangeSelectionMode _rangeSelectionMode;
   DateTime? _firstSelectedDay;
+  CalendarChooseView _viewMode = CalendarChooseView.day;
 
   @override
   void initState() {
     super.initState();
     _focusedDay = ValueNotifier(widget.focusedDay);
+    _focusedMonth = ValueNotifier(widget.focusedDay);
+    _focusedYear = ValueNotifier(widget.focusedDay);
     _rangeSelectionMode = widget.rangeSelectionMode;
   }
 
@@ -309,6 +329,11 @@ class _TableCalendarState<T> extends State<TableCalendar<T>> {
   @override
   void dispose() {
     _focusedDay.dispose();
+    _focusedMonth.dispose();
+    _focusedYear.dispose();
+    _pageController = null;
+    _pageMonthController = null;
+    _pageYearController = null;
     super.dispose();
   }
 
@@ -432,17 +457,41 @@ class _TableCalendarState<T> extends State<TableCalendar<T>> {
   }
 
   void _onLeftChevronTap() {
-    _pageController.previousPage(
-      duration: widget.pageAnimationDuration,
-      curve: widget.pageAnimationCurve,
-    );
+    if (_viewMode == CalendarChooseView.day) {
+      _pageController?.previousPage(
+        duration: widget.pageAnimationDuration,
+        curve: widget.pageAnimationCurve,
+      );
+    } else if (_viewMode == CalendarChooseView.month) {
+      _pageMonthController?.previousPage(
+        duration: widget.pageAnimationDuration,
+        curve: widget.pageAnimationCurve,
+      );
+    } else {
+      _pageYearController?.previousPage(
+        duration: widget.pageAnimationDuration,
+        curve: widget.pageAnimationCurve,
+      );
+    }
   }
 
   void _onRightChevronTap() {
-    _pageController.nextPage(
-      duration: widget.pageAnimationDuration,
-      curve: widget.pageAnimationCurve,
-    );
+    if (_viewMode == CalendarChooseView.day) {
+      _pageController?.nextPage(
+        duration: widget.pageAnimationDuration,
+        curve: widget.pageAnimationCurve,
+      );
+    } else if (_viewMode == CalendarChooseView.month) {
+      _pageMonthController?.nextPage(
+        duration: widget.pageAnimationDuration,
+        curve: widget.pageAnimationCurve,
+      );
+    } else {
+      _pageYearController?.nextPage(
+        duration: widget.pageAnimationDuration,
+        curve: widget.pageAnimationCurve,
+      );
+    }
   }
 
   @override
@@ -450,119 +499,245 @@ class _TableCalendarState<T> extends State<TableCalendar<T>> {
     return Column(
       children: [
         if (widget.headerVisible)
-          ValueListenableBuilder<DateTime>(
-            valueListenable: _focusedDay,
-            builder: (context, value, _) {
-              return CalendarHeader(
-                headerTitleBuilder: widget.calendarBuilders.headerTitleBuilder,
-                focusedMonth: value,
-                onLeftChevronTap: _onLeftChevronTap,
-                onRightChevronTap: _onRightChevronTap,
-                onHeaderTap: () => widget.onHeaderTapped?.call(value),
-                onHeaderLongPress: () =>
-                    widget.onHeaderLongPressed?.call(value),
-                headerStyle: widget.headerStyle,
-                availableCalendarFormats: widget.availableCalendarFormats,
-                calendarFormat: widget.calendarFormat,
-                locale: widget.locale,
-                onFormatButtonTap: (format) {
-                  assert(
-                    widget.onFormatChanged != null,
-                    'Using `FormatButton` without providing `onFormatChanged` will have no effect.',
-                  );
+          _viewMode == CalendarChooseView.day
+              ? ValueListenableBuilder<DateTime>(
+                  valueListenable: _focusedDay,
+                  builder: (context, value, _) {
+                    return CalendarHeader(
+                      headerTitleBuilder:
+                          widget.calendarBuilders.headerTitleBuilder,
+                      focusedMonth: value,
+                      onLeftChevronTap: _onLeftChevronTap,
+                      onRightChevronTap: _onRightChevronTap,
+                      onHeaderTap: () => widget.onHeaderTapped != null
+                          ? widget.onHeaderTapped?.call(value)
+                          : _onHeaderTapped(),
+                      onHeaderLongPress: () =>
+                          widget.onHeaderLongPressed?.call(value),
+                      headerStyle: widget.headerStyle,
+                      availableCalendarFormats: widget.availableCalendarFormats,
+                      calendarFormat: widget.calendarFormat,
+                      locale: widget.locale,
+                      onFormatButtonTap: (format) {
+                        assert(
+                          widget.onFormatChanged != null,
+                          'Using `FormatButton` without providing `onFormatChanged` will have no effect.',
+                        );
 
-                  widget.onFormatChanged?.call(format);
-                },
-              );
-            },
-          ),
+                        widget.onFormatChanged?.call(format);
+                      },
+                    );
+                  },
+                )
+              : _viewMode == CalendarChooseView.month
+                  ? ValueListenableBuilder<DateTime>(
+                      valueListenable: _focusedMonth,
+                      builder: (context, value, _) {
+                        return CalendarHeaderMonth(
+                          headerTitleBuilder:
+                              widget.calendarBuilders.headerTitleBuilder,
+                          focusedYear: value,
+                          onLeftChevronTap: _onLeftChevronTap,
+                          onRightChevronTap: _onRightChevronTap,
+                          onHeaderTap: () => widget.onHeaderTapped != null
+                              ? widget.onHeaderTapped?.call(value)
+                              : _onHeaderTapped(),
+                          onHeaderLongPress: () =>
+                              widget.onHeaderLongPressed?.call(value),
+                          headerStyle: widget.headerStyle,
+                          availableCalendarFormats:
+                              widget.availableCalendarFormats,
+                          calendarFormat: widget.calendarFormat,
+                          locale: widget.locale,
+                          onFormatButtonTap: (format) {
+                            assert(
+                              widget.onFormatChanged != null,
+                              'Using `FormatButton` without providing `onFormatChanged` will have no effect.',
+                            );
+
+                            widget.onFormatChanged?.call(format);
+                          },
+                        );
+                      })
+                  : ValueListenableBuilder<DateTime>(
+                      valueListenable: _focusedYear,
+                      builder: (context, value, _) {
+                        return CalendarHeaderYear(
+                          headerTitleBuilder:
+                              widget.calendarBuilders.headerTitleBuilder,
+                          focusedYearDuration: value,
+                          onLeftChevronTap: _onLeftChevronTap,
+                          onRightChevronTap: _onRightChevronTap,
+                          onHeaderTap: () => widget.onHeaderTapped != null
+                              ? widget.onHeaderTapped?.call(value)
+                              : _onHeaderTapped(),
+                          onHeaderLongPress: () =>
+                              widget.onHeaderLongPressed?.call(value),
+                          headerStyle: widget.headerStyle,
+                          availableCalendarFormats:
+                              widget.availableCalendarFormats,
+                          calendarFormat: widget.calendarFormat,
+                          locale: widget.locale,
+                          onFormatButtonTap: (format) {
+                            assert(
+                              widget.onFormatChanged != null,
+                              'Using `FormatButton` without providing `onFormatChanged` will have no effect.',
+                            );
+
+                            widget.onFormatChanged?.call(format);
+                          },
+                        );
+                      }),
         Flexible(
           flex: widget.shouldFillViewport ? 1 : 0,
-          child: TableCalendarBase(
-            onCalendarCreated: (pageController) {
-              _pageController = pageController;
-              widget.onCalendarCreated?.call(pageController);
-            },
-            focusedDay: _focusedDay.value,
-            calendarFormat: widget.calendarFormat,
-            availableGestures: widget.availableGestures,
-            firstDay: widget.firstDay,
-            lastDay: widget.lastDay,
-            startingDayOfWeek: widget.startingDayOfWeek,
-            dowDecoration: widget.daysOfWeekStyle.decoration,
-            rowDecoration: widget.calendarStyle.rowDecoration,
-            tableBorder: widget.calendarStyle.tableBorder,
-            tablePadding: widget.calendarStyle.tablePadding,
-            dowVisible: widget.daysOfWeekVisible,
-            dowHeight: widget.daysOfWeekHeight,
-            rowHeight: widget.rowHeight,
-            formatAnimationDuration: widget.formatAnimationDuration,
-            formatAnimationCurve: widget.formatAnimationCurve,
-            pageAnimationEnabled: widget.pageAnimationEnabled,
-            pageAnimationDuration: widget.pageAnimationDuration,
-            pageAnimationCurve: widget.pageAnimationCurve,
-            availableCalendarFormats: widget.availableCalendarFormats,
-            simpleSwipeConfig: widget.simpleSwipeConfig,
-            sixWeekMonthsEnforced: widget.sixWeekMonthsEnforced,
-            onVerticalSwipe: _swipeCalendarFormat,
-            onPageChanged: (focusedDay) {
-              _focusedDay.value = focusedDay;
-              widget.onPageChanged?.call(focusedDay);
-            },
-            weekNumbersVisible: widget.weekNumbersVisible,
-            weekNumberBuilder: (BuildContext context, DateTime day) {
-              final weekNumber = _calculateWeekNumber(day);
-              Widget? cell = widget.calendarBuilders.weekNumberBuilder
-                  ?.call(context, weekNumber);
+          child: Stack(
+            children: [
+              Opacity(
+                opacity: _viewMode == CalendarChooseView.day ? 1 : 0,
+                child: TableCalendarBase(
+                  onCalendarCreated: (pageController) {
+                    _pageController = pageController;
+                    widget.onCalendarCreated?.call(pageController);
+                  },
+                  focusedDay: _focusedDay.value,
+                  calendarFormat: widget.calendarFormat,
+                  availableGestures: widget.availableGestures,
+                  firstDay: widget.firstDay,
+                  lastDay: widget.lastDay,
+                  startingDayOfWeek: widget.startingDayOfWeek,
+                  dowDecoration: widget.daysOfWeekStyle.decoration,
+                  rowDecoration: widget.calendarStyle.rowDecoration,
+                  tableBorder: widget.calendarStyle.tableBorder,
+                  tablePadding: widget.calendarStyle.tablePadding,
+                  dowVisible: widget.daysOfWeekVisible,
+                  dowHeight: widget.daysOfWeekHeight,
+                  rowHeight: widget.rowHeight,
+                  formatAnimationDuration: widget.formatAnimationDuration,
+                  formatAnimationCurve: widget.formatAnimationCurve,
+                  pageAnimationEnabled: widget.pageAnimationEnabled,
+                  pageAnimationDuration: widget.pageAnimationDuration,
+                  pageAnimationCurve: widget.pageAnimationCurve,
+                  availableCalendarFormats: widget.availableCalendarFormats,
+                  simpleSwipeConfig: widget.simpleSwipeConfig,
+                  sixWeekMonthsEnforced: widget.sixWeekMonthsEnforced,
+                  onVerticalSwipe: _swipeCalendarFormat,
+                  onPageChanged: (focusedDay) {
+                    _focusedDay.value = focusedDay;
+                    widget.onPageChanged?.call(focusedDay);
+                  },
+                  weekNumbersVisible: widget.weekNumbersVisible,
+                  weekNumberBuilder: (BuildContext context, DateTime day) {
+                    final weekNumber = _calculateWeekNumber(day);
+                    Widget? cell = widget.calendarBuilders.weekNumberBuilder
+                        ?.call(context, weekNumber);
 
-              if (cell == null) {
-                cell = Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 4),
-                  child: Center(
-                    child: Text(
-                      weekNumber.toString(),
-                      style: widget.calendarStyle.weekNumberTextStyle,
-                    ),
+                    if (cell == null) {
+                      cell = Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 4),
+                        child: Center(
+                          child: Text(
+                            weekNumber.toString(),
+                            style: widget.calendarStyle.weekNumberTextStyle,
+                          ),
+                        ),
+                      );
+                    }
+
+                    return cell;
+                  },
+                  dowBuilder: (BuildContext context, DateTime day) {
+                    Widget? dowCell =
+                        widget.calendarBuilders.dowBuilder?.call(context, day);
+
+                    if (dowCell == null) {
+                      final weekdayString = widget
+                              .daysOfWeekStyle.dowTextFormatter
+                              ?.call(day, widget.locale) ??
+                          DateFormat.E(widget.locale).format(day);
+
+                      final isWeekend =
+                          _isWeekend(day, weekendDays: widget.weekendDays);
+
+                      dowCell = Center(
+                        child: ExcludeSemantics(
+                          child: Text(
+                            weekdayString,
+                            style: isWeekend
+                                ? widget.daysOfWeekStyle.weekendStyle
+                                : widget.daysOfWeekStyle.weekdayStyle,
+                          ),
+                        ),
+                      );
+                    }
+
+                    return dowCell;
+                  },
+                  dayBuilder: (context, day, focusedMonth) {
+                    return GestureDetector(
+                      behavior: widget.dayHitTestBehavior,
+                      onTap: () => _onDayTapped(day),
+                      onLongPress: () => _onDayLongPressed(day),
+                      child: _buildCell(day, focusedMonth),
+                    );
+                  },
+                ),
+              ),
+              if (_viewMode == CalendarChooseView.year)
+                Positioned.fill(
+                  child: CalendarChooseYear(
+                    focusedDay: _focusedYear.value,
+                    firstDay: widget.firstDay,
+                    lastDay: widget.lastDay,
+                    onPageYearControllerCreated: (pageYearController) {
+                      _pageYearController = pageYearController;
+                    },
+                    onYearDifChange: (focusedYear) {
+                      WidgetsBinding.instance.addPostFrameCallback((_) {
+                        _focusedYear.value = focusedYear;
+                      });
+                    },
+                    onSelectedYear: (focusedYear) {
+                      _focusedYear.value = focusedYear;
+                      _focusedMonth.value =
+                          _focusedMonth.value.copyWith(year: focusedYear.year);
+                      setState(() {
+                        _viewMode = CalendarChooseView.month;
+                      });
+                    },
+                    calendarChooseYearStyle: widget.calendarChooseYearStyle ??
+                        CalendarChooseYearStyle(),
                   ),
-                );
-              }
-
-              return cell;
-            },
-            dowBuilder: (BuildContext context, DateTime day) {
-              Widget? dowCell =
-                  widget.calendarBuilders.dowBuilder?.call(context, day);
-
-              if (dowCell == null) {
-                final weekdayString = widget.daysOfWeekStyle.dowTextFormatter
-                        ?.call(day, widget.locale) ??
-                    DateFormat.E(widget.locale).format(day);
-
-                final isWeekend =
-                    _isWeekend(day, weekendDays: widget.weekendDays);
-
-                dowCell = Center(
-                  child: ExcludeSemantics(
-                    child: Text(
-                      weekdayString,
-                      style: isWeekend
-                          ? widget.daysOfWeekStyle.weekendStyle
-                          : widget.daysOfWeekStyle.weekdayStyle,
-                    ),
+                ),
+              if (_viewMode == CalendarChooseView.month)
+                Positioned.fill(
+                  child: CalendarChooseMonth(
+                    focusedDay: _focusedMonth.value,
+                    firstDay: widget.firstDay,
+                    lastDay: widget.lastDay,
+                    onPageMonthControllerCreated: (pageMonthController) {
+                      _pageMonthController = pageMonthController;
+                    },
+                    locale: widget.locale,
+                    onYearChange: (month) {
+                      WidgetsBinding.instance.addPostFrameCallback((_) {
+                        _focusedMonth.value = month;
+                      });
+                    },
+                    onSelectedMonth: (month) {
+                      _focusedMonth.value = month;
+                      _focusedDay.value = _focusedDay.value.copyWith(
+                        month: month.month,
+                        year: month.year,
+                      );
+                      setState(() {
+                        _viewMode = CalendarChooseView.day;
+                      });
+                    },
+                    calendarChooseMonthStyle: widget.calendarChooseMonthStyle ??
+                        CalendarChooseMonthStyle(),
                   ),
-                );
-              }
-
-              return dowCell;
-            },
-            dayBuilder: (context, day, focusedMonth) {
-              return GestureDetector(
-                behavior: widget.dayHitTestBehavior,
-                onTap: () => _onDayTapped(day),
-                onLongPress: () => _onDayLongPressed(day),
-                child: _buildCell(day, focusedMonth),
-              );
-            },
+                )
+            ],
           ),
         ),
       ],
@@ -776,5 +951,15 @@ class _TableCalendarState<T> extends State<TableCalendar<T>> {
     List<int> weekendDays = const [DateTime.saturday, DateTime.sunday],
   }) {
     return weekendDays.contains(day.weekday);
+  }
+
+  void _onHeaderTapped() {
+    _viewMode = switch (_viewMode) {
+      CalendarChooseView.day => CalendarChooseView.year,
+      CalendarChooseView.month => CalendarChooseView.day,
+      CalendarChooseView.year => CalendarChooseView.month,
+    };
+
+    if (mounted) setState(() {});
   }
 }
