@@ -89,106 +89,118 @@ class _CalendarChooseMonthState extends State<CalendarChooseMonth> {
               final month = DateTime(start, index * 3 + 1);
               final month2 = DateTime(start, index * 3 + 2);
               final month3 = DateTime(start, index * 3 + 3);
+              final isDisable = month.isAfter(widget.lastDay) ||
+                  month.isBefore(widget.firstDay) ||
+                  month2.isAfter(widget.lastDay) ||
+                  month2.isBefore(widget.firstDay) ||
+                  month3.isAfter(widget.lastDay) ||
+                  month3.isBefore(widget.firstDay);
               return GestureDetector(
                 onTap: () {
-                  if (month.isAfter(widget.lastDay) ||
-                      month.isBefore(widget.firstDay) ||
-                      month2.isAfter(widget.lastDay) ||
-                      month2.isBefore(widget.firstDay) ||
-                      month3.isAfter(widget.lastDay) ||
-                      month3.isBefore(widget.firstDay)) return;
+                  if (isDisable) return;
                   widget.onSelectedMonth?.call(month);
                 },
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: Container(
-                        decoration: month.isAfter(widget.lastDay) ||
-                                month.isBefore(widget.firstDay)
-                            ? widget.calendarChooseMonthStyle
-                                ?.disableMonthDecoration
-                            : focusYear == month.year &&
-                                    focusMonth == month.month
-                                ? widget.calendarChooseMonthStyle
-                                    ?.chooseMonthDecoration
-                                : widget.calendarChooseMonthStyle
-                                    ?.unChooseMonthDecoration,
-                        child: Center(
-                          child: Text(
-                            DateFormat.MMMM(widget.locale).format(month),
-                            style: month.isAfter(widget.lastDay) ||
-                                    month.isBefore(widget.firstDay)
-                                ? widget
-                                    .calendarChooseMonthStyle?.disableTextStyle
-                                : focusYear == month.year &&
-                                        focusMonth == month.month
-                                    ? widget.calendarChooseMonthStyle
-                                        ?.chooseTextStyle
-                                    : widget.calendarChooseMonthStyle
-                                        ?.unChooseTextStyle,
+                child: Container(
+                  decoration: isDisable
+                      ? widget.calendarChooseMonthStyle?.disableMonthDecoration
+                      : focusYear == month.year && focusMonth == month.month
+                          ? widget
+                              .calendarChooseMonthStyle?.chooseMonthDecoration
+                          : widget.calendarChooseMonthStyle
+                              ?.unChooseMonthDecoration,
+                  padding: const EdgeInsets.symmetric(vertical: 10),
+                  margin: const EdgeInsets.symmetric(vertical: 10),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Container(
+                          decoration: month.isAfter(widget.lastDay) ||
+                                  month.isBefore(widget.firstDay)
+                              ? widget.calendarChooseMonthStyle
+                                  ?.disableMonthDecoration
+                              : focusYear == month.year &&
+                                      focusMonth == month.month
+                                  ? widget.calendarChooseMonthStyle
+                                      ?.chooseMonthDecoration
+                                  : widget.calendarChooseMonthStyle
+                                      ?.unChooseMonthDecoration,
+                          child: Center(
+                            child: Text(
+                              DateFormat.MMMM(widget.locale).format(month),
+                              style: month.isAfter(widget.lastDay) ||
+                                      month.isBefore(widget.firstDay)
+                                  ? widget.calendarChooseMonthStyle
+                                      ?.disableTextStyle
+                                  : focusYear == month.year &&
+                                          focusMonth == month.month
+                                      ? widget.calendarChooseMonthStyle
+                                          ?.chooseTextStyle
+                                      : widget.calendarChooseMonthStyle
+                                          ?.unChooseTextStyle,
+                            ),
                           ),
                         ),
                       ),
-                    ),
-                    Expanded(
-                      child: Container(
-                        decoration: month2.isAfter(widget.lastDay) ||
-                                month2.isBefore(widget.firstDay)
-                            ? widget.calendarChooseMonthStyle
-                                ?.disableMonthDecoration
-                            : focusYear == month.year &&
-                                    focusMonth == month.month
-                                ? widget.calendarChooseMonthStyle
-                                    ?.chooseMonthDecoration
-                                : widget.calendarChooseMonthStyle
-                                    ?.unChooseMonthDecoration,
-                        child: Center(
-                          child: Text(
-                            DateFormat.MMMM(widget.locale).format(month2),
-                            style: month2.isAfter(widget.lastDay) ||
-                                    month2.isBefore(widget.firstDay)
-                                ? widget
-                                    .calendarChooseMonthStyle?.disableTextStyle
-                                : focusYear == month.year &&
-                                        focusMonth == month.month
-                                    ? widget.calendarChooseMonthStyle
-                                        ?.chooseTextStyle
-                                    : widget.calendarChooseMonthStyle
-                                        ?.unChooseTextStyle,
+                      Expanded(
+                        child: Container(
+                          decoration: month2.isAfter(widget.lastDay) ||
+                                  month2.isBefore(widget.firstDay)
+                              ? widget.calendarChooseMonthStyle
+                                  ?.disableMonthDecoration
+                              : focusYear == month.year &&
+                                      focusMonth == month.month
+                                  ? widget.calendarChooseMonthStyle
+                                      ?.chooseMonthDecoration
+                                  : widget.calendarChooseMonthStyle
+                                      ?.unChooseMonthDecoration,
+                          child: Center(
+                            child: Text(
+                              DateFormat.MMMM(widget.locale).format(month2),
+                              style: month2.isAfter(widget.lastDay) ||
+                                      month2.isBefore(widget.firstDay)
+                                  ? widget.calendarChooseMonthStyle
+                                      ?.disableTextStyle
+                                  : focusYear == month.year &&
+                                          focusMonth == month.month
+                                      ? widget.calendarChooseMonthStyle
+                                          ?.chooseTextStyle
+                                      : widget.calendarChooseMonthStyle
+                                          ?.unChooseTextStyle,
+                            ),
                           ),
                         ),
                       ),
-                    ),
-                    Expanded(
-                      child: Container(
-                        decoration: month3.isAfter(widget.lastDay) ||
-                                month3.isBefore(widget.firstDay)
-                            ? widget.calendarChooseMonthStyle
-                                ?.disableMonthDecoration
-                            : focusYear == month.year &&
-                                    focusMonth == month.month
-                                ? widget.calendarChooseMonthStyle
-                                    ?.chooseMonthDecoration
-                                : widget.calendarChooseMonthStyle
-                                    ?.unChooseMonthDecoration,
-                        child: Center(
-                          child: Text(
-                            DateFormat.MMMM(widget.locale).format(month3),
-                            style: month3.isAfter(widget.lastDay) ||
-                                    month3.isBefore(widget.firstDay)
-                                ? widget
-                                    .calendarChooseMonthStyle?.disableTextStyle
-                                : focusYear == month.year &&
-                                        focusMonth == month.month
-                                    ? widget.calendarChooseMonthStyle
-                                        ?.chooseTextStyle
-                                    : widget.calendarChooseMonthStyle
-                                        ?.unChooseTextStyle,
+                      Expanded(
+                        child: Container(
+                          decoration: month3.isAfter(widget.lastDay) ||
+                                  month3.isBefore(widget.firstDay)
+                              ? widget.calendarChooseMonthStyle
+                                  ?.disableMonthDecoration
+                              : focusYear == month.year &&
+                                      focusMonth == month.month
+                                  ? widget.calendarChooseMonthStyle
+                                      ?.chooseMonthDecoration
+                                  : widget.calendarChooseMonthStyle
+                                      ?.unChooseMonthDecoration,
+                          child: Center(
+                            child: Text(
+                              DateFormat.MMMM(widget.locale).format(month3),
+                              style: month3.isAfter(widget.lastDay) ||
+                                      month3.isBefore(widget.firstDay)
+                                  ? widget.calendarChooseMonthStyle
+                                      ?.disableTextStyle
+                                  : focusYear == month.year &&
+                                          focusMonth == month.month
+                                      ? widget.calendarChooseMonthStyle
+                                          ?.chooseTextStyle
+                                      : widget.calendarChooseMonthStyle
+                                          ?.unChooseTextStyle,
+                            ),
                           ),
                         ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               );
             },
