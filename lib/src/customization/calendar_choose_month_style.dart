@@ -7,8 +7,10 @@ class CalendarChooseMonthStyle {
   final TextStyle unChooseTextStyle;
   final TextStyle chooseTextStyle;
   final TextStyle disableTextStyle;
+  final EdgeInsetsGeometry? padding;
 
   CalendarChooseMonthStyle({
+    this.padding,
     this.unChooseMonthDecoration = const BoxDecoration(
       color: Colors.white,
     ),

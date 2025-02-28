@@ -14,11 +14,13 @@ class CalendarChooseMonth extends StatefulWidget {
     this.onSelectedMonth,
     this.calendarChooseMonthStyle,
     this.locale,
+    this.isChooseQuaterOnly = false,
   });
 
   final DateTime focusedDay;
   final DateTime firstDay;
   final DateTime lastDay;
+  final bool isChooseQuaterOnly;
   final void Function(DateTime)? onYearChange;
   final void Function(PageController) onPageMonthControllerCreated;
   final void Function(DateTime)? onSelectedMonth;
@@ -72,45 +74,167 @@ class _CalendarChooseMonthState extends State<CalendarChooseMonth> {
   }
 
   Widget _buildYearGrid(int start) {
-    return GridView.builder(
-      padding: EdgeInsets.all(16),
-      physics: NeverScrollableScrollPhysics(),
-      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 3,
-        childAspectRatio: 2,
-        crossAxisSpacing: 10,
-        mainAxisSpacing: 10,
-      ),
-      itemCount: 12,
-      itemBuilder: (context, index) {
-        final month = DateTime(start, index + 1);
-        return GestureDetector(
-          onTap: () {
-            if (month.isAfter(widget.lastDay) ||
-                month.isBefore(widget.firstDay)) return;
-            widget.onSelectedMonth?.call(month);
-          },
-          child: Container(
-            decoration: month.isAfter(widget.lastDay) ||
-                    month.isBefore(widget.firstDay)
-                ? widget.calendarChooseMonthStyle?.disableMonthDecoration
-                : focusYear == month.year && focusMonth == month.month
-                    ? widget.calendarChooseMonthStyle?.chooseMonthDecoration
-                    : widget.calendarChooseMonthStyle?.unChooseMonthDecoration,
-            child: Center(
-              child: Text(
-                DateFormat.MMMM(widget.locale).format(month),
-                style: month.isAfter(widget.lastDay) ||
-                        month.isBefore(widget.firstDay)
-                    ? widget.calendarChooseMonthStyle?.disableTextStyle
-                    : focusYear == month.year && focusMonth == month.month
-                        ? widget.calendarChooseMonthStyle?.chooseTextStyle
-                        : widget.calendarChooseMonthStyle?.unChooseTextStyle,
-              ),
+    return widget.isChooseQuaterOnly
+        ? ListView.builder(
+            padding: EdgeInsets.all(16),
+            physics: NeverScrollableScrollPhysics(),
+            // gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+            //   crossAxisCount: 1,
+            //   childAspectRatio: 2,
+            //   crossAxisSpacing: 10,
+            //   mainAxisSpacing: 10,
+            // ),
+            itemCount: 4,
+            itemBuilder: (context, index) {
+              final month = DateTime(start, index * 3 + 1);
+              final month2 = DateTime(start, index * 3 + 2);
+              final month3 = DateTime(start, index * 3 + 3);
+              return GestureDetector(
+                onTap: () {
+                  if (month.isAfter(widget.lastDay) ||
+                      month.isBefore(widget.firstDay) ||
+                      month2.isAfter(widget.lastDay) ||
+                      month2.isBefore(widget.firstDay) ||
+                      month3.isAfter(widget.lastDay) ||
+                      month3.isBefore(widget.firstDay)) return;
+                  widget.onSelectedMonth?.call(month);
+                },
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Container(
+                        decoration: month.isAfter(widget.lastDay) ||
+                                month.isBefore(widget.firstDay)
+                            ? widget.calendarChooseMonthStyle
+                                ?.disableMonthDecoration
+                            : focusYear == month.year &&
+                                    focusMonth == month.month
+                                ? widget.calendarChooseMonthStyle
+                                    ?.chooseMonthDecoration
+                                : widget.calendarChooseMonthStyle
+                                    ?.unChooseMonthDecoration,
+                        child: Center(
+                          child: Text(
+                            DateFormat.MMMM(widget.locale).format(month),
+                            style: month.isAfter(widget.lastDay) ||
+                                    month.isBefore(widget.firstDay)
+                                ? widget
+                                    .calendarChooseMonthStyle?.disableTextStyle
+                                : focusYear == month.year &&
+                                        focusMonth == month.month
+                                    ? widget.calendarChooseMonthStyle
+                                        ?.chooseTextStyle
+                                    : widget.calendarChooseMonthStyle
+                                        ?.unChooseTextStyle,
+                          ),
+                        ),
+                      ),
+                    ),
+                    Expanded(
+                      child: Container(
+                        decoration: month2.isAfter(widget.lastDay) ||
+                                month2.isBefore(widget.firstDay)
+                            ? widget.calendarChooseMonthStyle
+                                ?.disableMonthDecoration
+                            : focusYear == month.year &&
+                                    focusMonth == month.month
+                                ? widget.calendarChooseMonthStyle
+                                    ?.chooseMonthDecoration
+                                : widget.calendarChooseMonthStyle
+                                    ?.unChooseMonthDecoration,
+                        child: Center(
+                          child: Text(
+                            DateFormat.MMMM(widget.locale).format(month2),
+                            style: month2.isAfter(widget.lastDay) ||
+                                    month2.isBefore(widget.firstDay)
+                                ? widget
+                                    .calendarChooseMonthStyle?.disableTextStyle
+                                : focusYear == month.year &&
+                                        focusMonth == month.month
+                                    ? widget.calendarChooseMonthStyle
+                                        ?.chooseTextStyle
+                                    : widget.calendarChooseMonthStyle
+                                        ?.unChooseTextStyle,
+                          ),
+                        ),
+                      ),
+                    ),
+                    Expanded(
+                      child: Container(
+                        decoration: month3.isAfter(widget.lastDay) ||
+                                month3.isBefore(widget.firstDay)
+                            ? widget.calendarChooseMonthStyle
+                                ?.disableMonthDecoration
+                            : focusYear == month.year &&
+                                    focusMonth == month.month
+                                ? widget.calendarChooseMonthStyle
+                                    ?.chooseMonthDecoration
+                                : widget.calendarChooseMonthStyle
+                                    ?.unChooseMonthDecoration,
+                        child: Center(
+                          child: Text(
+                            DateFormat.MMMM(widget.locale).format(month3),
+                            style: month3.isAfter(widget.lastDay) ||
+                                    month3.isBefore(widget.firstDay)
+                                ? widget
+                                    .calendarChooseMonthStyle?.disableTextStyle
+                                : focusYear == month.year &&
+                                        focusMonth == month.month
+                                    ? widget.calendarChooseMonthStyle
+                                        ?.chooseTextStyle
+                                    : widget.calendarChooseMonthStyle
+                                        ?.unChooseTextStyle,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            },
+          )
+        : GridView.builder(
+            padding: EdgeInsets.all(16),
+            physics: NeverScrollableScrollPhysics(),
+            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 3,
+              childAspectRatio: 2,
+              crossAxisSpacing: 10,
+              mainAxisSpacing: 10,
             ),
-          ),
-        );
-      },
-    );
+            itemCount: 12,
+            itemBuilder: (context, index) {
+              final month = DateTime(start, index + 1);
+              return GestureDetector(
+                onTap: () {
+                  if (month.isAfter(widget.lastDay) ||
+                      month.isBefore(widget.firstDay)) return;
+                  widget.onSelectedMonth?.call(month);
+                },
+                child: Container(
+                  decoration: month.isAfter(widget.lastDay) ||
+                          month.isBefore(widget.firstDay)
+                      ? widget.calendarChooseMonthStyle?.disableMonthDecoration
+                      : focusYear == month.year && focusMonth == month.month
+                          ? widget
+                              .calendarChooseMonthStyle?.chooseMonthDecoration
+                          : widget.calendarChooseMonthStyle
+                              ?.unChooseMonthDecoration,
+                  child: Center(
+                    child: Text(
+                      DateFormat.MMMM(widget.locale).format(month),
+                      style: month.isAfter(widget.lastDay) ||
+                              month.isBefore(widget.firstDay)
+                          ? widget.calendarChooseMonthStyle?.disableTextStyle
+                          : focusYear == month.year && focusMonth == month.month
+                              ? widget.calendarChooseMonthStyle?.chooseTextStyle
+                              : widget
+                                  .calendarChooseMonthStyle?.unChooseTextStyle,
+                    ),
+                  ),
+                ),
+              );
+            },
+          );
   }
 }
