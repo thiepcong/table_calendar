@@ -8,7 +8,7 @@ class CalendarChooseMonthStyle {
   final TextStyle chooseTextStyle;
   final TextStyle disableTextStyle;
   final EdgeInsetsGeometry? padding;
-  final Widget Function(int)? prefixShowQuarter;
+  final Widget Function(int quarter, bool isChoose)? prefixShowQuarter;
 
   CalendarChooseMonthStyle({
     this.prefixShowQuarter,

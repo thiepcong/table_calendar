@@ -114,8 +114,10 @@ class _CalendarChooseMonthState extends State<CalendarChooseMonth> {
                     children: [
                       if (widget.calendarChooseMonthStyle?.prefixShowQuarter !=
                           null)
-                        widget.calendarChooseMonthStyle!
-                            .prefixShowQuarter!(index),
+                        widget.calendarChooseMonthStyle!.prefixShowQuarter!(
+                          index,
+                          focusYear == month.year && focusMonth == month.month,
+                        ),
                       Expanded(
                         child: Container(
                           decoration: month.isAfter(widget.lastDay) ||
