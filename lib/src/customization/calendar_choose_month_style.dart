@@ -8,8 +8,10 @@ class CalendarChooseMonthStyle {
   final TextStyle chooseTextStyle;
   final TextStyle disableTextStyle;
   final EdgeInsetsGeometry? padding;
+  final Widget Function(int)? prefixShowQuarter;
 
   CalendarChooseMonthStyle({
+    this.prefixShowQuarter,
     this.padding,
     this.unChooseMonthDecoration = const BoxDecoration(
       color: Colors.white,

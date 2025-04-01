@@ -112,6 +112,10 @@ class _CalendarChooseMonthState extends State<CalendarChooseMonth> {
                   margin: const EdgeInsets.symmetric(vertical: 10),
                   child: Row(
                     children: [
+                      if (widget.calendarChooseMonthStyle?.prefixShowQuarter !=
+                          null)
+                        widget.calendarChooseMonthStyle!
+                            .prefixShowQuarter!(index),
                       Expanded(
                         child: Container(
                           decoration: month.isAfter(widget.lastDay) ||
