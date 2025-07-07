@@ -221,6 +221,9 @@ class TableCalendar<T> extends StatefulWidget {
   /// Chỉ cho chọn tháng
   final bool isChooseMonthOnly;
 
+  /// Chỉ cho chọn năm
+  final bool isChooseYearOnly;
+
   /// Creates a `TableCalendar` widget.
   TableCalendar({
     Key? key,
@@ -281,6 +284,7 @@ class TableCalendar<T> extends StatefulWidget {
     this.calendarChooseMonthStyle,
     this.isChooseQuaterOnly = false,
     this.isChooseMonthOnly = false,
+    this.isChooseYearOnly = false,
   })  : assert(availableCalendarFormats.keys.contains(calendarFormat)),
         assert(availableCalendarFormats.length <= CalendarFormat.values.length),
         assert(weekendDays.isNotEmpty
@@ -311,8 +315,13 @@ class _TableCalendarState<T> extends State<TableCalendar<T>> {
   @override
   void initState() {
     super.initState();
-    if (widget.isChooseMonthOnly || widget.isChooseQuaterOnly) {
+    if (widget.isChooseMonthOnly ||
+        widget.isChooseQuaterOnly ||
+        widget.isChooseYearOnly) {
       _viewMode = CalendarChooseView.month;
+      if (widget.isChooseYearOnly) {
+        _viewMode = CalendarChooseView.year;
+      }
     }
     _focusedDay = ValueNotifier(widget.focusedDay);
     _focusedMonth = ValueNotifier(widget.focusedDay);
@@ -601,41 +610,78 @@ class _TableCalendarState<T> extends State<TableCalendar<T>> {
                       }),
         Flexible(
           flex: widget.shouldFillViewport ? 1 : 0,
-          child: widget.isChooseMonthOnly || widget.isChooseQuaterOnly
+          child: widget.isChooseMonthOnly ||
+                  widget.isChooseQuaterOnly ||
+                  widget.isChooseYearOnly
               ? SizedBox(
-                  height: 300,
-                  child: ValueListenableBuilder<DateTime>(
-                      valueListenable: _focusedDay,
-                      builder: (context, value, _) {
-                        return CalendarChooseMonth(
-                          key: Key(value.toString()),
-                          focusedDay: value,
-                          firstDay: widget.firstDay,
-                          lastDay: widget.lastDay,
-                          onPageMonthControllerCreated: (pageMonthController) {
-                            _pageMonthController = pageMonthController;
-                          },
-                          locale: widget.locale,
-                          onYearChange: (month) {
-                            WidgetsBinding.instance.addPostFrameCallback((_) {
-                              _focusedMonth.value = month;
-                            });
-                          },
-                          isChooseQuaterOnly: widget.isChooseQuaterOnly,
-                          onSelectedMonth: (month) {
-                            _focusedMonth.value = month;
-                            _focusedDay.value = _focusedDay.value.copyWith(
-                              month: month.month,
-                              year: month.year,
+                  height: 320,
+                  child: widget.isChooseYearOnly
+                      ? ValueListenableBuilder<DateTime>(
+                          valueListenable: _focusedDay,
+                          builder: (context, value, _) {
+                            return CalendarChooseYear(
+                              key: Key(value.toString()),
+                              focusedDay: value,
+                              firstDay: widget.firstDay,
+                              lastDay: widget.lastDay,
+                              onPageYearControllerCreated:
+                                  (pageMonthController) {
+                                _pageMonthController = pageMonthController;
+                              },
+                              onYearDifChange: (month) {
+                                WidgetsBinding.instance
+                                    .addPostFrameCallback((_) {
+                                  _focusedYear.value = month;
+                                });
+                              },
+                              onSelectedYear: (month) {
+                                _focusedYear.value = month;
+                                _focusedDay.value = _focusedDay.value.copyWith(
+                                  month: month.month,
+                                  year: month.year,
+                                );
+                                widget.onDaySelected?.call(
+                                    _focusedDay.value, _focusedYear.value);
+                              },
+                              calendarChooseYearStyle:
+                                  widget.calendarChooseYearStyle ??
+                                      CalendarChooseYearStyle(),
                             );
-                            widget.onDaySelected
-                                ?.call(_focusedDay.value, _focusedMonth.value);
-                          },
-                          calendarChooseMonthStyle:
-                              widget.calendarChooseMonthStyle ??
-                                  CalendarChooseMonthStyle(),
-                        );
-                      }),
+                          })
+                      : ValueListenableBuilder<DateTime>(
+                          valueListenable: _focusedDay,
+                          builder: (context, value, _) {
+                            return CalendarChooseMonth(
+                              key: Key(value.toString()),
+                              focusedDay: value,
+                              firstDay: widget.firstDay,
+                              lastDay: widget.lastDay,
+                              onPageMonthControllerCreated:
+                                  (pageMonthController) {
+                                _pageMonthController = pageMonthController;
+                              },
+                              locale: widget.locale,
+                              onYearChange: (month) {
+                                WidgetsBinding.instance
+                                    .addPostFrameCallback((_) {
+                                  _focusedMonth.value = month;
+                                });
+                              },
+                              isChooseQuaterOnly: widget.isChooseQuaterOnly,
+                              onSelectedMonth: (month) {
+                                _focusedMonth.value = month;
+                                _focusedDay.value = _focusedDay.value.copyWith(
+                                  month: month.month,
+                                  year: month.year,
+                                );
+                                widget.onDaySelected?.call(
+                                    _focusedDay.value, _focusedMonth.value);
+                              },
+                              calendarChooseMonthStyle:
+                                  widget.calendarChooseMonthStyle ??
+                                      CalendarChooseMonthStyle(),
+                            );
+                          }),
                 )
               : Stack(
                   children: [
